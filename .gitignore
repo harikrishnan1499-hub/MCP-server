@@ -1,0 +1,31 @@
+# Logs
+logs
+*.log
+
+# npm
+npm-debug.log.*
+
+# Node Files #
+/node_modules
+node_modules
+node_modules/
+/bower_components
+/package-lock.json
+
+# Dist #
+/dist
+/public/__build__/
+/src/*/__build__/
+__build__/**
+.webpack.json
+
+# IDE #
+.idea/
+*.swp
+.env
+.iml
+.vscode
+.project
+*.lock
+yarn.lock
+serviceAccountKey.json

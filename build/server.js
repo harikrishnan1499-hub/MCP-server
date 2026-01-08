@@ -6,7 +6,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mcp_js_1 = require("@modelcontextprotocol/sdk/server/mcp.js");
 const stdio_js_1 = require("@modelcontextprotocol/sdk/server/stdio.js");
 const zod_1 = require("zod");
-const data_js_1 = __importDefault(require("./data/data.js"));
+const path_1 = __importDefault(require("path"));
+const promises_1 = require("fs/promises");
 // Create server instance
 const server = new mcp_js_1.McpServer({
     name: "test-app",
@@ -55,9 +56,32 @@ server.registerTool("create_user", {
         };
     }
 });
+server.registerResource("users_json", "users://all", {
+    description: "A local JSON resource containing user data",
+    title: "Users",
+    mimeType: "application/json"
+}, async (uri) => {
+    const filePath = path_1.default.join(process.cwd(), "src/data/users.json");
+    const fileContent = await (0, promises_1.readFile)(filePath, "utf-8");
+    return {
+        contents: [
+            {
+                uri: uri.href, // what uri we trying to access -> here it is users://all 
+                mimeType: "application/json",
+                text: fileContent
+            }
+        ]
+    };
+});
 async function createUserInDatabase(userDetails) {
-    const users = [...data_js_1.default];
-    users.push({ ...userDetails });
+    const filePath = path_1.default.join(process.cwd(), "src/data/users.json");
+    const fileContent = await (0, promises_1.readFile)(filePath, "utf-8");
+    const userData = JSON.parse(fileContent);
+    console.error("Existing Users:", userData);
+    const data = userData;
+    data.push(...userData, userDetails);
+    const upddatedContent = JSON.stringify(data, null, 2);
+    await (0, promises_1.writeFile)(filePath, upddatedContent, "utf-8");
     return userDetails.id;
 }
 async function main() {

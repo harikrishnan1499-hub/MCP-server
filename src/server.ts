@@ -3,7 +3,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import {  z } from "zod";
 import data from "./data/data.js";
 import path from "path";
-import { readFile } from "fs/promises";
+import { readFile,writeFile } from "fs/promises";
 
 // Create server instance
 const server = new McpServer({
@@ -61,18 +61,21 @@ server.registerTool("create_user",
 )
 
 server.registerResource(
-  {
-    uri: "local/user",
-    name: "Local user JSON",
+    "users_json",
+    "users://all",
+    {
     description: "A local JSON resource containing user data",
+    title: "Users",
+    mimeType: "application/json"
     },
-    async () => {
+
+    async (uri) => {
       const filePath = path.join(process.cwd(), "src/data/users.json");
       const fileContent = await readFile(filePath, "utf-8");
       return {
         contents: [
           {
-            uri: "local/user",
+            uri: uri.href, // what uri we trying to access -> here it is users://all 
             mimeType: "application/json",
             text: fileContent
           }
@@ -82,8 +85,14 @@ server.registerResource(
  );
 
 async function createUserInDatabase(userDetails: { id: string; userName: string; email: string; }) {
-    const users = [...data];
-    users.push({...userDetails });
+   const filePath = path.join(process.cwd(), "src/data/users.json");
+      const fileContent = await readFile(filePath, "utf-8");
+      const userData = JSON.parse(fileContent);
+      console.error("Existing Users:", userData);
+      const data = userData;
+      data.push(...userData,userDetails);
+    const upddatedContent = JSON.stringify(data, null, 2);
+    await writeFile(filePath, upddatedContent, "utf-8");
     return userDetails.id; 
 
 } 
